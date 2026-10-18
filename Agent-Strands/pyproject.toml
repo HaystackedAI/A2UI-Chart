@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "a2ui-chart-strands"
+version = "0.9.0"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "haystackedai" }]
+keywords = ["a2ui", "chart", "agent", "bedrock", "agentcore", "strands", "visualization"]
+description = "Agent-side A2UI chart producer for @haystackedai/a2ui-chart-react clients. Keep your agent (bedrock/agentcore/strands and your own biz logic untouched); add a few lines where you already have the answer data and get a validated, drillable A2UI chart surface. Contract (catalogId + schemas) is baked, overridable."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "a2ui-core >= 0.2.0, < 0.3.0",
+    "pydantic >= 2.7",
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
+
+[project.urls]
+Homepage = "https://github.com/haystackedai/"
+Repository = "https://github.com/haystackedai/a2ui-chart"
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/a2ui_chart_strands"]

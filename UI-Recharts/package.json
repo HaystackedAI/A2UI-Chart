@@ -1,0 +1,45 @@
+{
+    "name": "@haystackedai/a2ui-chart-react",
+    "version": "0.9.0",
+    "description": "A2UI chart experience for @a2ui/react hosts, runtime included. One hook (useA2UIChart) + one view (A2UIChartView) give a host an agent-driven, drillable Recharts chart with no MessageProcessor, transport, catalog-merge or drill wiring to write. Contract (catalogId + schemas) is injected, not baked.",
+    "license": "MIT",
+    "type": "module",
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "sideEffects": false,
+    "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "prepublishOnly": "npm run build"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "peerDependencies": {
+        "@a2ui/markdown-it": "^0.2.0",
+        "@a2ui/react": "^0.12.0",
+        "@a2ui/web_core": "^0.12.0",
+        "react": "^18.0.0 || ^19.0.0",
+        "recharts": "^3.0.0",
+        "zod": "^3.23.0"
+    },
+    "devDependencies": {
+        "@a2ui/markdown-it": "0.2.0",
+        "@a2ui/react": "^0.12.0",
+        "@a2ui/web_core": "^0.12.0",
+        "@types/react": "^19.2.17",
+        "react": "^19.2.7",
+        "recharts": "^3.10.1",
+        "typescript": "~6.0.2",
+        "zod": "^3.25.76"
+    }
+}
