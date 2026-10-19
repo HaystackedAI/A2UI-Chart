@@ -22,6 +22,12 @@ The model composes the chart surface, picks the chart type, and names the column
 
 The model literally cannot corrupt a figure, because it never held the figure.
 
+## Built for Strands, not ADK
+
+Google's official A2UI agent samples run a Gemini-powered **ADK** agent, and the agent-side helper packages (`a2ui-agent-sdk`, `a2ui-adk`) are built around Google's Agent Development Kit. That path doesn't drop into a Strands agent on AWS Bedrock / AgentCore.
+
+`a2ui-chart-agent` builds directly on the **framework-agnostic `a2ui-core`** (Pydantic only — no ADK, no Gemini, no second agent framework). It plugs into a Strands agent and emits A2UI chart surfaces from your own LLM calls. The A2UI protocol core already allows this; A2UI-Chart is the ready-made, ADK-free chart producer that makes it two lines.
+
 ## Two insertion points per side
 
 A2UI-Chart ships as a symmetric pair that hides the entire A2UI message loop — MessageProcessor, catalog merge, surface mirroring, transport, and drill wiring. You keep your own page shell and your own agent (Bedrock / AgentCore / Strands / LangGraph / anything).
@@ -29,7 +35,7 @@ A2UI-Chart ships as a symmetric pair that hides the entire A2UI message loop —
 | Package | Where | What it gives you |
 |---|---|---|
 | `@haystackedai/a2ui-chart-react` (npm) | Frontend | One hook (`useChart`) + one view (`ChartView`) |
-| `a2ui-chart-agent` (pip) | Agent | One `Chart` producer: `(rows, columns, answer) → validated A2UI surface messages` |
+| `a2ui-chart-agent` (pip) | Agent | One `Chart` producer: `(rows, columns, answer) → validated A2UI surface messages`. Built on framework-agnostic `a2ui-core` (no ADK) — drops into Strands. |
 
 ## Install
 
