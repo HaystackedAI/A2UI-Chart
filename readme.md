@@ -4,7 +4,7 @@
 
 > A2UI-Chart is an **unofficial, community** charting catalog + agent producer built on the A2UI protocol. It is not affiliated with or endorsed by Google or the A2UI maintainers.
 
-Licensed under Apache-2.0.
+Licensed under MIT.
 
 ---
 
@@ -96,4 +96,4 @@ The renderer is pluggable; the reference implementation uses Recharts.
 
 ## License
 
-Apache-2.0.
+MIT.
