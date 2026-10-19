@@ -1,65 +1,57 @@
-# A2UI-Chart — open-source positioning & launch doc
+# A2UI-Chart
 
-Source to extract from: `C:\dev\voa\A4UI_Package` (internal codename "A4UI").
-Target: a public GitHub repo under the user's own scope (`@haystackedai`), Apache-2.0.
+**The charting layer the [A2UI protocol](https://a2ui.org) doesn't ship — agent-driven charts where the model never touches your data.**
 
----
+> A2UI-Chart is an **unofficial, community** charting catalog + agent producer built on the A2UI protocol. It is not affiliated with or endorsed by Google or the A2UI maintainers.
 
-## 1. Name & one-liner
-
-**Project name:** `A2UI-Chart`
-
-**Tagline:** *The charting layer the A2UI protocol doesn't ship — agent-driven charts where the model never touches your data.*
-
-Why this name:
-- A2UI (Google's open server-driven-UI standard) deliberately ships only basic components (Card, Button, TextField). **Charts are not built in.** `A2UI-Chart` names exactly that gap.
-- Rides a real, searchable standard (A2UI is at v0.9.1, v1.0 candidate, ~16.7k stars). Anyone searching "a2ui chart" lands here.
-- Honest about scope: an *extension of* A2UI, not a fork or reinvention.
-
-**Unofficial/community disclaimer (put this near the top of the README):**
-> A2UI-Chart is an **unofficial, community** charting catalog + agent producer built on the [A2UI protocol](https://a2ui.org). It is not affiliated with or endorsed by Google or the A2UI maintainers.
-
-This one line removes any "looks like `@a2ui/*` official scope" ambiguity — reads as confident, not defensive.
+Licensed under Apache-2.0.
 
 ---
 
-## 2. The pitch (what makes it worth open-sourcing)
+## Why
 
-Three differentiators, in priority order. Lead with #1 and #2 everywhere.
+A2UI is an open standard that lets AI agents "speak UI" — agents emit declarative component descriptions, and clients render them with native widgets from a trusted catalog. By design, A2UI ships only basic components (Card, Button, TextField). **Charts are left to the ecosystem.**
 
-1. **Symmetry — two insertion points per side.** One React hook (`useChart`) + one view component on the frontend; one `Chart` producer object on the agent. Both **hide the entire A2UI message loop** (MessageProcessor, catalog merge, surface mirroring, transport, drill wiring). You keep your own page shell and your own Bedrock/AgentCore/Strands/LangGraph/whatever agent — you add charts in ~2 lines each side.
+A2UI-Chart fills that gap, and adds a safety property most AI-charting tools miss.
 
-2. **"Data-outside" safety.** The LLM composes the surface, picks the chart type, and names column *roles* — **from the question and column names only. It never sees or emits the numbers.** Code binds the real rows into `updateDataModel` via A2UI `{path}` bindings. For an AI-charting tool this is *the* trust story: the model cannot silently corrupt a figure, because the model never had the figure.
+## How it works: data-outside
 
-3. **Contract-injected, versioned, drift-gated.** The chart catalog isn't baked into the package — the **host injects it** (`catalogId` + control/datashape schemas). A byte-equality version handshake between frontend and agent disables chart input on skew. "Production-grade, not a demo."
+The LLM never touches your data.
 
-Headline to use: **"Agent-driven charts where the model never touches your data."**
+The model composes the chart surface, picks the chart type, and names the column *roles* — **from the question and the column names only.** It never sees or emits the actual numbers. Code binds the real rows into the chart via A2UI's data model (`updateDataModel` + `{path}` bindings).
 
----
+The model literally cannot corrupt a figure, because it never held the figure.
 
-## 3. What ships (the package pair)
+## Two insertion points per side
 
-Extract from `A4UI_Package/`. Rename on the way out — drop the internal `@swel` scope and the `A4`/`a4ui` codename.
+A2UI-Chart ships as a symmetric pair that hides the entire A2UI message loop — MessageProcessor, catalog merge, surface mirroring, transport, and drill wiring. You keep your own page shell and your own agent (Bedrock / AgentCore / Strands / LangGraph / anything).
 
-| In repo now | Public name (proposed) | What it is |
+| Package | Where | What it gives you |
 |---|---|---|
-| `A4UI_Package/A4React` (`@swel/a4react`) | `@haystackedai/a2ui-chart-react` (npm) | The whole A2UI chart runtime as `useChart` hook + `ChartView` component. Contract injected by host. Peer-deps `@a2ui/*`, recharts, zod. |
-| `A4UI_Package/A4Agent` (`a4ui-agent`) | `a2ui-chart-agent` (pip) | Chart *producer*: `Chart(rows, columns, answer) → validated A2UI surface messages`, plus `.rechart()`, `.drill_prompt()`, `.version()`. Deps only `a2ui-core` + `pydantic`. |
+| `@haystackedai/a2ui-chart-react` (npm) | Frontend | One hook (`useChart`) + one view (`ChartView`) |
+| `a2ui-chart-agent` (pip) | Agent | One `Chart` producer: `(rows, columns, answer) → validated A2UI surface messages` |
 
-Both are already BUILT and working against the live app; the open-source job is **extraction + rename + public packaging**, not new feature work ("tech is done").
+## Install
 
----
+```bash
+# frontend
+npm install @haystackedai/a2ui-chart-react
 
-## 4. Quickstart to put in the README
+# agent
+pip install a2ui-chart-agent
+```
+
+## Quickstart
 
 **Frontend (React):**
 ```tsx
 import { useChart, ChartView } from "@haystackedai/a2ui-chart-react";
 
 const { surfaces, send, drill, loading } = useChart({
-  catalogId, controlSchema, datashapeSchema,   // host injects the contract
+  catalogId, controlSchema, datashapeSchema,   // inject your contract
   endpoint: "/api/chart",
 });
+
 return <ChartView surfaces={surfaces} drill={drill} />;
 ```
 
@@ -67,49 +59,41 @@ return <ChartView surfaces={surfaces} drill={drill} />;
 ```python
 from a2ui_chart_agent import Chart, a2ui_frame
 
-chart = Chart(contract=REAL_CONTRACT)           # host injects the contract
-rows, columns, answer = run_your_agent(question)  # your logic, unchanged
+chart = Chart(contract=REAL_CONTRACT)              # inject your contract
+rows, columns, answer = run_your_agent(question)   # your logic, unchanged
+
 for frame in a2ui_frame(chart.surface(rows, columns, answer)):
     yield frame
 ```
 
-That side-by-side symmetry **is** the money diagram for both the README and LinkedIn.
+## The contract
 
----
+The chart catalog is injected by the host, not baked into the package.
 
-## 5. The contract model (explain it, it's the credential)
+- **One source of truth:** two JSON Schemas — `chart.control.json` (the allowed `plotType` vocabulary) and `chart.datashape.json` (the series shape).
+- **Generated both ways:** zod schemas for the frontend, Pydantic models for the agent.
+- **Drift-gated:** each side carries a `version` + `catalogId`. The frontend handshakes on mount and disables chart input on byte-mismatch, so a frontend and an agent can never silently diverge.
 
-- One source of truth: two JSON Schemas — `chart.control.json` (allowed `plotType`: scatter/bar/column/line/area/pie/donut/KPI_CARD/table) and `chart.datashape.json`.
-- Generators fan it out to both ends (zod for the frontend, Pydantic for the agent).
-- Each carries a `version` + `catalogId`; the frontend handshakes on mount and **disables chart input on byte-mismatch**.
-- The package ships a **MOCK default contract** on purpose (`regen-before-deploy`) — the host overrides it via `Chart(contract=...)` / `useChart({...})`. Document this clearly so adopters don't ship the mock.
+The package ships a mock default contract — override it (`Chart(contract=...)` / `useChart({...})`) with your own catalog before deploying.
 
-> For the OSS repo, include a tiny example contract + the generator so adopters can define their own chart vocabulary. The single-source codegen (`A2UI_catalog_src/`) is a strong thing to show but may stay as an "example tooling" folder rather than a published package.
+## Chart types
 
----
+`scatter`, `bar`, `column`, `line`, `area`, `pie`, `donut`, `KPI_CARD`, `table`.
 
-## 6. Extraction checklist (A4UI_Package → public repo)
+The renderer is pluggable; the reference implementation uses Recharts.
 
-- [ ] New public repo, Apache-2.0 (match A2UI's license).
-- [ ] Rename npm pkg `@swel/a4react` → `@haystackedai/a2ui-chart-react`; drop `.npmrc`/`publishConfig` pointing at Sanofi JFrog.
-- [ ] Rename pip pkg `a4ui-agent` → `a2ui-chart-agent`; drop the `[[tool.uv.index]]` Artifactory source.
-- [ ] Purge all Sanofi-internal references: ARNs, `voa.sanofi.com` catalogId, `rnd_pulseai_*`, ALB hostnames, internal infra. Replace the baked catalogId with a neutral example (e.g. `https://example.com/a2ui/catalogs/demo/v1/catalog.json`).
-- [ ] Fix the stale `A4Agent/instruction_agent.md` (documents an old `make_a4ui_agent()` API that doesn't match the shipped `Chart` exports) — delete or rewrite to match the README.
-- [ ] Add a minimal runnable demo (a tiny agent + a tiny React page) so the repo is a working example, not just two libraries.
-- [ ] README with: disclaimer, pitch (§2), quickstart (§4), contract model (§5), roadmap (§7).
-- [ ] CONTRIBUTING + a clear "how to define your own catalog" guide.
+## Interaction
 
----
+- **Re-chart** — switch chart type over the cached series with no new query (layout-only re-emit).
+- **Drill-down** — click a slice to trigger a scoped follow-up query and swap the surface in place.
 
-## 7. Roadmap to show (signals it's alive, not abandoned)
+## Roadmap
 
-- **Track A2UI v1.0.** Its new `actionResponse` RPC + action IDs will retire the custom `DrillContext` bridge that currently works around @a2ui/react 0.12 being unable to dispatch actions from a custom component. "Drill-down gets simpler when v1.0 lands" is a good public note.
-- **Eval harness** for chart-type / role selection (the honest biggest gap).
-- **Semantic data-profiler** — upgrade the LLM's input from bare column names → chart-ready roles, so the chart choice is right every time.
-- More renderers beyond Recharts (the renderer is pluggable).
+- Track A2UI v1.0 (`actionResponse` RPC + action IDs) to simplify the drill-down path.
+- Eval harness for chart-type / role selection.
+- Semantic data-profiler: upgrade the model's input from bare column names to chart-ready roles.
+- Additional renderers beyond Recharts.
 
----
+## License
 
-## 8. Honest scope note for the repo
-
-State plainly that this came out of a real internal analytics app (text-to-SQL → chart), so the design is battle-shaped, but the OSS release is the *reusable* core with the contract injectable. Don't overclaim "production-proven at scale" — it's a working, well-designed extraction. The data-outside property and the symmetry are the genuine, defensible contributions.
+Apache-2.0.
